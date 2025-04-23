@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Calculadora de Impacto Logístico</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #222;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin-bottom: 25px;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-top: 12px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      margin-top: 5px;
+    }
+
+    button {
+      background: #0077c9;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      margin-top: 15px;
+      margin-right: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #005fa3;
+    }
+
+    .uf-card {
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .resultado-card {
+      background: #e7f3ff;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 25px;
+    }
+
+    .icone {
+      font-size: 22px;
+      margin-right: 6px;
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <h1>🚚 Calculadora de Impacto Logístico</h1>
+
+  <div class="card">
+    <label>Total de peças pendentes:</label>
+    <input type="number" id="pecasPendentes">
+
+    <label>Total de caixas pendentes:</label>
+    <input type="number" id="caixasPendentes">
+
+    <label>Capacidade por hora (peças):</label>
+    <input type="number" id="capPecas">
+
+    <label>Capacidade por hora (caixas):</label>
+    <input type="number" id="capCaixas">
+
+    <label>Horas paradas:</label>
+    <input type="number" id="horasParadas">
+
+    <button onclick="adicionarUF()">+ Adicionar UF</button>
+    <button onclick="calcularImpacto()">Calcular Impacto</button>
+
+    <div id="ufs"></div>
+  </div>
+
+  <div id="resultado"></div>
+
+</div>
+
+<script>
+function adicionarUF() {
+  const div = document.createElement('div');
+  div.className = 'uf-card';
+  div.innerHTML = `
+    <label>UF:</label>
+    <input type="text" class="ufNome" placeholder="Ex: BA">
+    <label>📌 Peças pendentes:</label>
+    <input type="number" class="pecasUF">
+    <label>📦 Caixas pendentes:</label>
+    <input type="number" class="caixasUF">
+  `;
+  document.getElementById('ufs').appendChild(div);
+}
+
+function calcularImpacto() {
+  const totalPecasPend = Number(document.getElementById('pecasPendentes').value);
+  const totalCaixasPend = Number(document.getElementById('caixasPendentes').value);
+  const capPecas = Number(document.getElementById('capPecas').value);
+  const capCaixas = Number(document.getElementById('capCaixas').value);
+  const horas = Number(document.getElementById('horasParadas').value);
+
+  const impactoPecas = Math.min(capPecas * horas, totalPecasPend);
+  const impactoCaixas = Math.min(capCaixas * horas, totalCaixasPend);
+
+  const ufs = document.querySelectorAll('.uf-card');
+  let totalPecasUF = 0;
+  ufs.forEach(uf => {
+    totalPecasUF += Number(uf.querySelector('.pecasUF').value);
+  });
+
+  let resultadoUFs = '';
+
+  ufs.forEach(uf => {
+    const nome = uf.querySelector('.ufNome').value || 'UF';
+    const pecasUF = Number(uf.querySelector('.pecasUF').value);
+    const caixasUF = Number(uf.querySelector('.caixasUF').value);
+
+    // Ajuste da fórmula para o impacto proporcional por UF
+    const impactoPecasUF = pecasUF ? Math.min((impactoPecas * (pecasUF / totalPecasPend)), pecasUF) : 0;
+    const percPecasUF = pecasUF ? (impactoPecasUF / pecasUF * 100).toFixed(2) : 0;
+    const percPecasTotal = totalPecasPend ? (impactoPecasUF / totalPecasPend * 100).toFixed(2) : 0;
+
+    resultadoUFs += `
+      <div class="uf-card">
+        <strong>📍 ${nome}</strong><br>
+        📌 Peças pendentes: ${pecasUF}<br>
+        📦 Caixas pendentes: ${caixasUF}<br>
+        ⚠️ Impacto peças: ${impactoPecasUF.toFixed(0)}<br>
+        📊 % no UF: ${percPecasUF}%<br>
+        📊 % no total: ${percPecasTotal}%<br>
+      </div>
+    `;
+  });
+
+  document.getElementById('resultado').innerHTML = `
+    <div class="resultado-card">
+      <h3>📊 Resultado Geral</h3>
+      🔸 Impacto total: <strong>${impactoPecas}</strong> peças e <strong>${impactoCaixas}</strong> caixas
+    </div>
+    ${resultadoUFs}
+  `;
+}
+</script>
+
+</body>
+</html>
